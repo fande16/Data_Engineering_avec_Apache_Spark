@@ -27,6 +27,22 @@ Par conséquent, il faut remplir ***FILL_IN*** avec les methodes qui corresponde
 - Datasets : les données se trouvent dans le repertoire datasets
 
 
+## resultat
+**chemin des output**: dataset/events/output
+
+**resultat du ETL sur le fichier event.json**
+- cleanData()
+![image](https://github.com/user-attachments/assets/1c0321f2-b444-4a31-86b3-1e825089c602)
+![image](https://github.com/user-attachments/assets/9454c02c-c5f5-4150-95ae-64137f72127a)
+
+- computeTrafficRevenue
+
+  ![image](https://github.com/user-attachments/assets/cb56c6f6-1f1e-44c9-9b92-c77819135a2d)
+
+
+
+
+
 
 ## Licence 
 @copyright 
