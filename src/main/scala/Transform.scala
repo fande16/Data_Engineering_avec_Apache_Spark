@@ -1,4 +1,5 @@
 import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.functions.{avg, col, date_format, desc, format_number, from_unixtime, sum}
 
 object Transform {
 
@@ -13,19 +14,23 @@ object Transform {
     0. Traiter toutes les colonnes en date timestamp vers YYYY/MM/DD HH:MM SSS.
      */
 
-    val firstDF = df.FILL_IN
-
+    val firstDF = df.withColumn("event_previous_timestamp",
+      from_unixtime(col("event_previous_timestamp") / 1000000, "yyyy/MM/dd HH:mm:ss"))
+      .withColumn("event_timestamp",
+        from_unixtime(col("event_timestamp") / 1000000, "yyyy/MM/dd HH:mm:ss"))
+      .withColumn("user_first_touch_timestamp",
+        from_unixtime(col("user_first_touch_timestamp") / 1000000, "yyyy/MM/dd HH:mm:ss"))
     /*
     1. Extraire les revenus d'achat pour chaque événement
       - Ajouter une nouvelle colonne nommée revenue en faisant l'extration de ecommerce.purchase_revenue_in_usd
      */
 
-    val revenueDF = firstDF.FILL_IN
+    val revenueDF = firstDF.withColumn("revenue", col("ecommerce.purchase_revenue_in_usd"))
 
     /*
     2. Filtrer les événements dont le revenu n'est pas null
     */
-    val purchasesDF = revenueDF.FILL_IN
+    val purchasesDF = revenueDF.filter(col("revenue").isNotNull)
 
 
     /*
@@ -34,14 +39,15 @@ object Transform {
       Combien y a t-il de type d'evenement ?
      */
 
-    val distinctDF = purchasesDF.FILL_IN
-
+    val distinctDF = purchasesDF.select("event_name").distinct()
+    // Compter le nombre de types d'événements uniques
+    val eventCount = distinctDF.count()
     /*
      4. Supprimer la/les colonne(s9 inutile(s)
       - Supprimez event_name de purchasesDF.
       */
 
-    val cleanDF = distinctDF.FILL_IN
+    val cleanDF = purchasesDF.drop("event_name")
 
     cleanDF
 
@@ -64,13 +70,17 @@ object Transform {
       - Obtenir la moyenne de revenue comme avg_rev
      */
 
-    val trafficDF = df.FILL_IN
+    val trafficDF = df.groupBy("traffic_source", "geo.state", "geo.city")
+      .agg(
+        sum("revenue").as("total_rev"),
+        avg("revenue").as("avg_rev")
+      )
 
     /*
     6. Recuperer les cinqs principales sources de trafic par revenu total
 
      */
-    val topTrafficDF = trafficDF.FILL_IN
+    val topTrafficDF = trafficDF.orderBy(desc("total_rev")).limit(5)
 
 
     /*
@@ -78,7 +88,10 @@ object Transform {
       Modifier les colonnes avg_rev et total_rev pour les convertir en des nombres avec deux décimales pointés
      */
 
-    val finalDF = topTrafficDF.FILL_IN
+    val finalDF = topTrafficDF
+      .withColumn("total_rev", format_number(col("total_rev"), 2))
+      .withColumn("avg_rev", format_number(col("avg_rev"), 2))
+
 
     finalDF
 

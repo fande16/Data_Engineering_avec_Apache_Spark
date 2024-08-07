@@ -16,7 +16,18 @@ object Load {
   Completer la fonction ci-dessous.
    */
 
-  def saveData(df: DataFrame, saveMode: String, format: String, path: String): Nothing = ???
+  def saveData(df: DataFrame, saveMode: String, format: String, path: String): Unit = {
+    try {
+      df.write
+        .mode(saveMode)
+        .format(format)
+        .save(path)
+    } catch {
+      case e: Exception =>
+        println(s"Error saving data: ${e.getMessage}")
+        throw e
+    }
+  }
 
 
 
